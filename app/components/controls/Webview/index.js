@@ -12,6 +12,8 @@ import { updateUrlAndTimestamp, updateTimestamp } from 'redux/modules/controls';
 
 import './style.scss';
 
+const { app } = require('electron').remote;
+
 
 class Webview extends Component {
   static propTypes = {
@@ -58,11 +60,8 @@ class Webview extends Component {
     if (nextProps.url !== url || nextProps.timestamp !== timestamp) {
       if (!this.internalUpdate) {
         const proxyUrl = `http://webrecorder.proxy/local/collection/${nextProps.timestamp}/${nextProps.url}`;
+        this.loadingTimeout();
         this.setState({ loading: true });
-
-        // set a timeout in case loading never finishes
-        clearTimeout(this.loadingTimeout);
-        this.loadingTimeout = setTimeout(() => { this.setState({loading: false})}, 10000);
 
         this.webviewHandle.loadURL(proxyUrl);
       }
@@ -84,6 +83,12 @@ class Webview extends Component {
     window.removeEventListener('wr-go-back', this.goBack);
     window.removeEventListener('wr-go-forward', this.goForward);
     window.removeEventListener('wr-refresh', this.refresh);
+  }
+
+  loadingTimeout = () => {
+        // set a timeout in case loading never finishes
+    clearTimeout(this.timeoutHandle);
+    this.timeoutHandle = setTimeout(() => { this.setState({loading: false})}, 15000);
   }
 
   openDroppedFile = (filename) => {
@@ -150,12 +155,16 @@ class Webview extends Component {
 
   goBack = () => {
     if (this.webviewHandle.canGoBack()) {
+      this.loadingTimeout();
+      this.setState({ loading: true});
       this.webviewHandle.goToIndex(this.webviewHandle.getWebContents().getActiveIndex() - 1);
     }
   }
 
   goForward = () => {
     if (this.webviewHandle.canGoForward()) {
+      this.loadingTimeout();
+      this.setState({ loading: true});
       this.webviewHandle.goToIndex(this.webviewHandle.getWebContents().getActiveIndex() + 1);
     }
   }
@@ -170,6 +179,14 @@ class Webview extends Component {
     const proxyUrl = `http://webrecorder.proxy/local/collection/${timestamp}/${url}`;
     const classes = classNames('webview-wrapper', { loading });
 
+    const appPath = app.getAppPath();
+    let preloadPath;
+    if (process.env.NODE_ENV === 'production') {
+      preloadPath = path.resolve(appPath, '..', 'preload.js');
+    } else {
+      preloadPath = path.resolve(__dirname, '..', 'preload.js');
+    }
+
     return (
       <div className={classes}>
         <webview
@@ -178,7 +195,7 @@ class Webview extends Component {
           src={proxyUrl}
           autosize="on"
           plugins="true"
-          preload={`file://${path.join(__dirname, 'helpers/preload.js')}`}
+          preload={preloadPath}
           partition="persist:wr" />
       </div>
     );

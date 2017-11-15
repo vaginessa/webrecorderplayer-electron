@@ -19,12 +19,16 @@ $collTrigger: rgb(0, 57, 229);
         margin-bottom: 4rem;
 
         h1 {
-            font-family: serif;
+            font-family: $serif;
             margin-top: 0;
         }
 
         hr {
             border-top: solid .3rem $yellow;
+        }
+
+        .coll-desc {
+            font-family: $sans;
         }
     }
 
@@ -39,6 +43,8 @@ $collTrigger: rgb(0, 57, 229);
             "sidebar utilities"
             "sidebar table";
 
+        font-family: $sans;
+
 
         .wr-coll-sidebar-container {
             grid-area: sidebar;
@@ -50,6 +56,14 @@ $collTrigger: rgb(0, 57, 229);
                 bottom: 0;
                 width: 100%;
                 overflow: auto;
+
+                h4 {
+                    margin: .7rem 0;
+                }
+
+                .recording-time-info {
+                    display: inline-block;
+                }
 
                 .recording-session {
                     transition: color 175ms ease-in-out;
